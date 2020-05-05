@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SolarCoffee.Services.Product;
 using SolarCoffee.Web.Serialization;
+using SolarCoffee.Web.ViewModels;
 
 namespace SolarCoffee.Web.Controllers
 {
@@ -18,6 +19,31 @@ namespace SolarCoffee.Web.Controllers
             _productService = productService;
         }
 
+        /// <summary>
+        /// Adds a new product into the Database
+        /// </summary>
+        /// <param name="product"></param>
+        /// <returns></returns>
+        [HttpPost("api/product")]
+        public ActionResult AddProduct([FromBody] ProductViewModel product)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
+            _logger.LogInformation("Adding product");
+            var newProduct = ProductMapper.SerializeProductViewModel(product);
+            var newProductResponse = _productService.CreateProduct(newProduct);
+
+            return Ok(newProductResponse);
+        }
+            
+           
+        /// <summary>
+        /// returns all the products
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("/api/product")]
         public ActionResult GetProduct()
         {
@@ -28,9 +54,19 @@ namespace SolarCoffee.Web.Controllers
             return Ok(productViewModels);
         }
 
+        /// <summary>
+        /// Archives an existing product
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpPatch("/api/product/{id}")]
         public ActionResult ArchiveProduct(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
             _logger.LogInformation("Archiving product");
             var archiveResult = _productService.ArchivedProduct(id);
             return Ok(archiveResult);

@@ -3,12 +3,14 @@
         <h1 id="inventoryTitle">Inventory Dashboard</h1>
         <hr/>
 
-        <solar-button @click.native="showNewProductModal" id="addNewBtn">
-            Add New Item
-        </solar-button>
-        <solar-button @click.native="showShipmentModal" id="receiveShipmentBtn">
-            Receive Shipment
-        </solar-button>
+        <div class="inventory-actions">
+            <solar-button @button:click="showNewProductModal" id="addNewBtn">
+                Add New Item
+            </solar-button>
+            <solar-button @button:click="showShipmentModal" id="receiveShipmentBtn">
+                Receive Shipment
+            </solar-button>
+        </div>
 
         <table class="table" id="inventoryTable">
             <tr>
@@ -19,12 +21,25 @@
                 <th>Delete</th>
             </tr>
             <tr :key="item.id" v-for="item in inventory">
-                <td>{{ item.product.name }}</td>
-                <td>{{ item.quantityOnHand }}</td>
-                <td>{{ item.product.price | price }}</td>
-                <td>{{ item.product.isTaxable ? "Yes" : "No" }}</td>
                 <td>
-                    <div>x</div>
+                    {{ item.product.name }}
+                </td>
+                <td
+                        v-bind:class="`${applyColor(item.quantityOnHand, item.idealQuantity)}`"
+                >
+                    {{ item.quantityOnHand }}
+                </td>
+                <td>
+                    {{ item.product.price | price }}
+                </td>
+                <td>
+                    {{ item.product.isTaxable ? "Yes" : "No" }}
+                </td>
+                <td>
+                    <div
+                            @click="archiveProduct(item.product.id)"
+                            class="lni lni-cross-circle product-archive"
+                    ></div>
                 </td>
             </tr>
         </table>
@@ -50,6 +65,11 @@
     import ShipmentModal from "@/components/modals/ShipmentModal.vue";
     import NewProductModal from "@/components/modals/NewProductModal.vue";
     import {IShipment} from "@/types/Shipment";
+    import {InventoryService} from "@/services/inventory-service";
+    import {ProductService} from "@/services/product-service";
+
+    const inventoryService = new InventoryService();
+    const productService = new ProductService();
 
     @Component({
         name: "Inventory",
@@ -59,38 +79,28 @@
         isNewProductVisible: boolean = false;
         isShipmentVisible: boolean = false;
 
-        inventory: IProductInventory[] = [
-            {
-                id: 1,
-                product: {
-                    id: 1,
-                    name: "Some Product",
-                    description: "Good stuff",
-                    price: 100,
-                    createdOn: new Date(),
-                    updatedOn: new Date(),
-                    isTaxable: true,
-                    isArchived: false
-                },
-                quantityOnHand: 1,
-                idealQuantity: 10
-            },
-            {
-                id: 2,
-                product: {
-                    id: 2,
-                    name: "Some other Product",
-                    description: "Better stuff",
-                    price: 190,
-                    createdOn: new Date(),
-                    updatedOn: new Date(),
-                    isTaxable: false,
-                    isArchived: false
-                },
-                quantityOnHand: 1,
-                idealQuantity: 10
+        inventory: IProductInventory[] = [];
+
+        async archiveProduct(productId: number) {
+            await productService.archive(productId);
+            await this.initialize();
+        }
+
+        async saveNewProduct(newProduct: IProduct) {
+            await productService.save(newProduct);
+            this.isNewProductVisible = false;
+            await this.initialize();
+        }
+
+        applyColor(currentInventoryLevel: number, idealInventoryLevel: number) {
+            if (currentInventoryLevel <= 0) {
+                return "red";
+            } else if (Math.abs(idealInventoryLevel - currentInventoryLevel) > 8) {
+                return "yellow"
             }
-        ];
+
+            return "green"
+        }
 
         closeModals() {
             this.isNewProductVisible = false;
@@ -102,18 +112,21 @@
         }
 
         showShipmentModal() {
-            this.isShipmentVisible= true;
+            this.isShipmentVisible = true;
         }
 
-        saveNewProduct(product: IProduct) {
-            console.log('saveNewProduct');
-            console.log(product);
+        async saveNewShipment(shipment: IShipment) {
+            await inventoryService.updatedInventoryQuantity(shipment);
+            this.isShipmentVisible = false;
+            await this.initialize();
         }
 
-        saveNewShipment(shipment: IShipment) {
-            console.log('saveNewShipment');
-            console.log(shipment);
+        async initialize() {
+            this.inventory = await inventoryService.getInventory();
+        }
 
+        async created() {
+            await this.initialize();
         }
     }
 </script>
