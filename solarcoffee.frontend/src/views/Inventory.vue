@@ -15,6 +15,7 @@
         <table class="table" id="inventoryTable">
             <tr>
                 <th>Item</th>
+                <th>Description</th>
                 <th>Quantity On-hand</th>
                 <th>Unit Price</th>
                 <th>Taxable</th>
@@ -23,6 +24,9 @@
             <tr :key="item.id" v-for="item in inventory">
                 <td>
                     {{ item.product.name }}
+                </td>
+                <td>
+                    {{item.product.description}}
                 </td>
                 <td
                         v-bind:class="`${applyColor(item.quantityOnHand, item.idealQuantity)}`"
