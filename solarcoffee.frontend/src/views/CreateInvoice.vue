@@ -7,15 +7,15 @@
 
         <div class="invoice-step" v-if="invoiceStep === 1">
             <h2>Step 1: Select Customer</h2>
-            <div v-if="customers.length" class="invoice-step-detail">
+            <div class="invoice-step-detail" v-if="customers.length">
                 <label for="customer">Customer:</label>
                 <select
-                        v-model="selectedCustomerId"
                         class="invoice-customers"
                         id="customer"
+                        v-model="selectedCustomerId"
                 >
                     <option disabled value="">Please select a Customer</option>
-                    <option v-for="customer in customers" :value="customer.id" :key="customer.id">
+                    <option :key="customer.id" :value="customer.id" v-for="customer in customers">
                         {{customer.firstName + " " + customer.lastName }}
                     </option>
                 </select>
@@ -24,11 +24,160 @@
 
         <div class="invoice-step" v-if="invoiceStep === 2">
             <h2>Step 2: Create Order</h2>
+            <hr/>
+
+            <div class="invoice-step-detail" v-if="inventory.length">
+                <label for="product">Product:</label>
+                <select class="invoiceLineItem" id="product" v-model="newItem.product">
+                    <option disabled value="">Please select a Product</option>
+                    <option :key="inventory.product.id" :value="inventory.product" v-for="inventory in inventory">
+                        {{ inventory.product.name }}
+                    </option>
+                </select>
+                <label for="quantity">Quantity:</label>
+                <input id="quantity" min="0" type="number" v-model="newItem.quantity"/>
+            </div>
+
+            <div class="invoice-item-actions">
+                <solar-button
+                        :disabled="!newItem.product || !newItem.quantity"
+                        @button:click="addLineItem"
+                >
+                    Add Line Item
+                </solar-button>
+
+                <solar-button
+                        :disabled="!lineItems.length"
+                        @button:click="finalizeOrder"
+                >
+                    Finalize Order
+                </solar-button>
+            </div>
+
+            <div class="invoice-order-list" v-if="lineItems.length">
+                <div class="runningTotal">
+                    <h3>Running Total:</h3>
+                    {{ runningTotal | price }}
+                </div>
+                <hr/>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Description</th>
+                        <th>Qty.</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tr
+                            :key="`index_${lineItem.product.id}`"
+                            v-for="lineItem in lineItems"
+                    >
+                        <td>{{ lineItem.product.name }}</td>
+                        <td>{{ lineItem.product.description }}</td>
+                        <td>{{ lineItem.quantity }}</td>
+                        <td>{{ lineItem.product.price | price}}</td>
+                        <td>{{ (lineItem.product.price * lineItem.quantity) | price }}</td>
+                    </tr>
+                </table>
+            </div>
         </div>
 
         <div class="invoice-step" v-if="invoiceStep === 3">
+            <h2>Step 3: Review and Submit</h2>
+            <solar-button @button:click="submitInvoice">Submit Invoice</solar-button>
+            <hr/>
 
+            <div class="invoice-step-detail" id="invoice" ref="invoice">
+                <div class="invoice-logo">
+                    <img
+                            alt="Solar Coffee logo"
+                            id="imgLogo"
+                            src="../assets/images/logo.png"
+                    />
+                    <h3>1337 Solar Lane</h3>
+                    <h3>San Somewhere, CA 90000</h3>
+                    <h3>USA</h3>
+
+                    <div class="invoice-order-list" v-if="lineItems.length">
+                        <div class="invoice-header">
+                            <h3>Invoice: {{ new Date() | toHumanReadableDate }}</h3>
+                            <h3>
+                                Customer:
+                                {{
+                                this.selectedCustomer.firstName +
+                                " " +
+                                this.selectedCustomer.lastName
+                                }}
+                            </h3>
+                            <h3>
+                                Address: {{ this.selectedCustomer.primaryAddress.addressLine1 }}
+                            </h3>
+                            <h3 v-if="this.selectedCustomer.primaryAddress.addressLine2">
+                                {{ this.selectedCustomer.primaryAddress.addressLine2 }}
+                            </h3>
+                            <h3>
+                                {{ this.selectedCustomer.primaryAddress.city }},
+                                {{ this.selectedCustomer.primaryAddress.state }},
+                                {{ this.selectedCustomer.primaryAddress.postalCode }}
+                            </h3>
+                            <h3>
+                                {{ this.selectedCustomer.primaryAddress.country }}
+                            </h3>
+                        </div>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Description</th>
+                                <th>Qty.</th>
+                                <th>Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                            </thead>
+                            <tr
+                                    :key="`index_${lineItem.product.id}`"
+                                    v-for="lineItem in lineItems"
+                            >
+                                <td>{{ lineItem.product.name }}</td>
+                                <td>{{ lineItem.product.description }}</td>
+                                <td>{{ lineItem.quantity }}</td>
+                                <td>{{ lineItem.product.price }}</td>
+                                <td>
+                                    {{ (lineItem.product.price * lineItem.quantity) | price }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th colspan="4"></th>
+                                <th>Grand Total</th>
+                            </tr>
+                            <tfoot>
+                            <tr>
+                                <td class="due" colspan="4">Balance due upon receipt:</td>
+                                <td class="price-final">{{ runningTotal | price }}</td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
+        <hr/>
+
+        <div class="invoice-steps-actions">
+            <solar-button :disabled="!canGoPrev" @button:click="prev"
+            >Previous
+            </solar-button
+            >
+            <solar-button :disabled="!canGoNext" @button:click="next"
+            >Next
+            </solar-button
+            >
+            <solar-button @button:click="startOver">Start Over</solar-button>
+        </div>
+
+
     </div>
 </template>
 
@@ -41,13 +190,18 @@
     import CustomerService from "@/services/customer-service";
     import {InventoryService} from "@/services/inventory-service";
     import InvoiceService from "@/services/invoice-service";
+    import SolarButton from "@/components/SolarButton.vue";
+
+    // noinspection TypeScriptCheckImport
+    import jsPDF from "jspdf";
+    import html2canvas from "html2canvas";
 
 
     const customerService = new CustomerService();
     const inventoryService = new InventoryService();
     const invoiceService = new InvoiceService();
 
-    @Component({name: 'Create Invoice'})
+    @Component({name: 'CreateInvoice', components: {SolarButton}})
     export default class extends Vue {
         invoiceStep: number = 1;
         invoice: IInvoice = {
@@ -62,6 +216,98 @@
         inventory: IProductInventory[] = [];
         lineItems: ILineItem[] = [];
         newItem: ILineItem = {product: undefined, quantity: 0};
+
+        get canGoNext() {
+            if (this.invoiceStep === 1) {
+                return this.selectedCustomerId !== 0;
+            }
+            if (this.invoiceStep === 2) {
+                return this.lineItems.length;
+            }
+            if (this.invoiceStep === 3) {
+                return false;
+            }
+            return false;
+        }
+
+        get canGoPrev() {
+            return this.invoiceStep !== 1;
+        }
+
+        get runningTotal() {
+            return this.lineItems.reduce(
+                (a, b) => a + b["product"]!["price"] * b["quantity"],
+                0
+            );
+        }
+
+        get selectedCustomer() {
+            return this.customers.find(c => c.id == this.selectedCustomerId);
+        }
+
+        async submitInvoice(): Promise<void> {
+            this.invoice = {
+                customerId: this.selectedCustomerId,
+                lineItems: this.lineItems
+            };
+            await invoiceService.makeNewInvoice(this.invoice);
+            this.downloadPdf();
+            await this.$router.push("/orders");
+        }
+
+        downloadPdf() {
+            let pdf = new jsPDF("p", "pt", "a4", true);
+            let invoice = document.getElementById("invoice");
+            let width = this.$refs.invoice.clientWidth;
+            let height = this.$refs.invoice.clientHeight;
+            html2canvas(invoice).then(canvas => {
+                let image = canvas.toDataURL("image/png");
+                pdf.addImage(image, "PNG", 0, 0, width * 0.55, height * 0.55);
+                pdf.save("invoice");
+            });
+        }
+
+        addLineItem() {
+            let newItem: ILineItem = {
+                product: this.newItem.product,
+                quantity: Number(this.newItem.quantity)
+            };
+            let existingItems = this.lineItems.map(item => item.product!.id);
+            if (existingItems.includes(newItem.product!.id)) {
+                let lineItem = this.lineItems.find(
+                    item => item.product!.id === newItem.product!.id
+                );
+                let currentQuantity = Number(lineItem!.quantity);
+                let updatedQuantity = (currentQuantity += newItem.quantity);
+                lineItem!.quantity = updatedQuantity;
+            } else {
+                this.lineItems.push(this.newItem);
+            }
+            this.newItem = {product: undefined, quantity: 0};
+        }
+
+        startOver(): void {
+            this.invoice = {customerId: 0, lineItems: []};
+            this.invoiceStep = 1;
+        }
+
+        finalizeOrder() {
+            this.invoiceStep = 3;
+        }
+
+        prev(): void {
+            if (this.invoiceStep === 1) {
+                return;
+            }
+            this.invoiceStep -= 1;
+        }
+
+        next(): void {
+            if (this.invoiceStep === 3) {
+                return;
+            }
+            this.invoiceStep += 1;
+        }
 
         async initialize(): Promise<void> {
             customerService.getCustomers().then(x => this.customers = x);

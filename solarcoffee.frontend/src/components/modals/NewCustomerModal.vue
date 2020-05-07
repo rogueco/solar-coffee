@@ -1,3 +1,5 @@
+<!--suppress XmlUnboundNsPrefix -->
+
 <template>
     <solar-modal>
         <template v-slot:header>
@@ -91,7 +93,16 @@
     })
     export default class NewCustomerModal extends Vue {
         customer: ICustomer = {
-            primaryAddress: {},
+            primaryAddress: {
+                addressLine1: "",
+                addressLine2: "",
+                county:"",
+                country: "",
+                postalCode: "",
+                city:"",
+                createdOn: new Date(),
+                updatedOn: new Date(),
+            },
             createdOn: new Date(),
             updatedOn: new Date(),
             firstName: "",

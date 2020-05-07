@@ -1,5 +1,5 @@
 export interface ICustomer {
-    id: number;
+    id?: number;
     createdOn: Date;
     updatedOn: Date;
     firstName: string;
@@ -8,7 +8,7 @@ export interface ICustomer {
 }
 
 export interface ICustomerAddress {
-    id: number;
+    id?: number;
     createdOn: Date;
     updatedOn: Date;
     addressLine1: string;
