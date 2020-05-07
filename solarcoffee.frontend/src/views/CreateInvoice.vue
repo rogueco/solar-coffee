@@ -94,7 +94,7 @@
                     <img
                             alt="Solar Coffee logo"
                             id="imgLogo"
-                            src="../assets/images/logo.png"
+                            src="../assets/images/solar_coffee_logo.png"
                     />
                     <h3>1337 Solar Lane</h3>
                     <h3>San Somewhere, CA 90000</h3>

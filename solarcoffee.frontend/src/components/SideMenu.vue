@@ -1,7 +1,7 @@
 <template>
     <div class="side-menu-container">
         <router-link to="/">
-            <img alt="Vue logo" id="imgLogo" src="../assets/images/logo.png"/>
+            <img alt="Vue logo" id="imgLogo" src="../assets/images/solar_coffee_logo.png"/>
         </router-link>
         <h1>Management Portal</h1>
         <solar-button
