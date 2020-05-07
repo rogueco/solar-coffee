@@ -119,7 +119,7 @@
                             </h3>
                             <h3>
                                 {{ this.selectedCustomer.primaryAddress.city }},
-                                {{ this.selectedCustomer.primaryAddress.state }},
+                                {{ this.selectedCustomer.primaryAddress.county }},
                                 {{ this.selectedCustomer.primaryAddress.postalCode }}
                             </h3>
                             <h3>
