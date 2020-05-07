@@ -1,4 +1,4 @@
-import { IProduct } from "@/types/Product";
+import {IProduct} from "@/types/Product";
 
 export interface IInvoice {
     customerId: number;

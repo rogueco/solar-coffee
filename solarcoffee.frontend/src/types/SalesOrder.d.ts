@@ -1,6 +1,5 @@
-
-import { ICustomer } from "@/types/Customer";
-import { ILineItem } from "@/types/Invoice";
+import {ICustomer} from "@/types/Customer";
+import {ILineItem} from "@/types/Invoice";
 
 export interface ISalesOrder {
     id: number;

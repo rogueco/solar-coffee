@@ -191,7 +191,6 @@
     import {InventoryService} from "@/services/inventory-service";
     import InvoiceService from "@/services/invoice-service";
     import SolarButton from "@/components/SolarButton.vue";
-
     // noinspection TypeScriptCheckImport
     import jsPDF from "jspdf";
     import html2canvas from "html2canvas";

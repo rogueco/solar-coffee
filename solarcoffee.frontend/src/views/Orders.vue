@@ -3,8 +3,8 @@
         <h1 id="ordersTitle">
             Sales Orders
         </h1>
-        <hr />
-        <table id="sales-orders" class="table" v-if="orders.length">
+        <hr/>
+        <table class="table" id="sales-orders" v-if="orders.length">
             <thead>
             <tr>
                 <th>CustomerId</th>
@@ -13,7 +13,7 @@
                 <th>Order Status</th>
                 <th>Mark Complete</th>
             </tr>
-            <tr v-for="order in orders" :key="order.id">
+            <tr :key="order.id" v-for="order in orders">
                 <td>
                     {{ order.customer.id }}
                 </td>
@@ -28,9 +28,9 @@
                 </td>
                 <td>
                     <div
-                            v-if="!order.isPaid"
-                            class="lni lni-checkmark-circle order-complete green"
                             @click="markComplete(order.id)"
+                            class="lni lni-checkmark-circle order-complete green"
+                            v-if="!order.isPaid"
                     ></div>
                 </td>
             </tr>
@@ -40,41 +40,49 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue } from "vue-property-decorator";
-    import { OrderService } from "@/services/order-service";
-    import { ISalesOrder } from "@/types/SalesOrder";
+    import {Component, Vue} from "vue-property-decorator";
+    import {OrderService} from "@/services/order-service";
+    import {ISalesOrder} from "@/types/SalesOrder";
+
     const orderService = new OrderService();
-    @Component({ name: "Orders" })
+    @Component({name: "Orders"})
     export default class Orders extends Vue {
         orders: ISalesOrder[] = [];
+
         getTotal(order: ISalesOrder) {
             return order.salesOrderItems.reduce(
                 (a, b) => a + b["product"]!["price"] * b["quantity"],
                 0
             );
         }
+
         getStatus(isPaid: boolean) {
             return isPaid ? "Paid in Full" : "Unpaid";
         }
+
         async markComplete(orderId: number) {
             await orderService.markOrderComplete(orderId);
             await this.initialize();
         }
+
         async initialize() {
             this.orders = await orderService.getOrders();
         }
+
         async created() {
             await this.initialize();
         }
     }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
     @import "@/scss/global.scss";
+
     .green {
         font-weight: bold;
         color: $solar-green;
     }
+
     .order-complete {
         cursor: pointer;
         text-align: center;
