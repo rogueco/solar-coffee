@@ -130,6 +130,7 @@
 
         async initialize() {
             this.inventory = await inventoryService.getInventory();
+            await this.$store.dispatch("assignSnapshots");
         }
 
         async created() {
